@@ -1,3 +1,4 @@
+#!/bin/bash
 accessToken=$(curl "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
 	-H "Content-Type: application/x-www-form-urlencoded" \
 	-d "grant_type=client_credentials" \
@@ -20,9 +21,9 @@ TargetReportName="helloworld_restored"
 
 
 ##### Backup #####
-
 encodedSpace="%20"
 encodedSourceWorkspaceName="${SourceWorkspaceName// /"$encodedSpace"}"
+
 echo "Get source workspace $SourceWorkspaceName"
 sourceGroupId=$(curl -s "$baseUri/groups?%24filter=name%20eq%20%27${encodedSourceWorkspaceName}%27" \
   -H "Authorization: Bearer $accessToken" | jq -r '.value[0].id')
