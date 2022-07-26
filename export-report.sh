@@ -74,8 +74,8 @@ curl -X POST "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Rebind" \
   -d "{ \"datasetId\": \"$dummyDatasetId\" }" \
   -H "Content-Type: application/json"
 
-sourceReportFilePath="$PWD/$SourceReportName.pbix"
-echo "Exporting report $exportReportName"
+sourceReportFilePath="$PWD/$SourceReportName.zip"
+echo "Exporting report $exportReportName to $sourceReportFilePath"
 curl -s "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferClientRouting=true" \
   -H "Authorization: Bearer $accessToken" \
   -o $sourceReportFilePath
