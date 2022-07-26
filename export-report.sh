@@ -1,6 +1,10 @@
-#az login --service-principal -u $env:ClientId -p $env:ClientSecret --tenant $env:TenantId
-accessToken=$(az account get-access-token --resource 'https://analysis.windows.net/powerbi/api' | jq -r '.accessToken')
-tenantId=$(az account show | jq -r '.tenantId')
+accessToken=$(curl "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
+	-H "Content-Type: application/x-www-form-urlencoded" \
+	-d "grant_type=client_credentials" \
+  -d "client_id=$PBI_CREDS_USR" \
+  -d "client_secret=$PBI_CREDS_PSW" \
+  -d "resource=https://analysis.windows.net/powerbi/api" \
+  -d "scope=https://analysis.windows.net/powerbi/api" | jq -r '.access_token')
 
 baseUri="https://api.powerbi.com/v1.0/myorg"
 
