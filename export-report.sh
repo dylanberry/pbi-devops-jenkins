@@ -41,7 +41,7 @@ sourceReportId=$(echo $sourceReport | jq -r '.id')
 
 dummyReportId=$(echo $dummyReport | jq -r '.id')
 
-exportReportName="$sourceReportName-export"
+exportReportName="$SourceReportName-export"
 exportReport=$(curl -X POST "$baseUri/groups/$sourceGroupId/reports/$dummyReportId/Clone" \
   -H "Authorization: Bearer $accessToken" \
   -d "{ \"name\": \"$exportReportName\" }" \
