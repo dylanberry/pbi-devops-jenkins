@@ -76,7 +76,7 @@ curl -X POST "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Rebind" \
 
 sourceReportFilePath="$PWD/$SourceReportName.zip"
 echo "Exporting report $exportReportName to $sourceReportFilePath"
-curl -s "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferClientRouting=true" \
+curl "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferClientRouting=true" \
   -H "Authorization: Bearer $accessToken" \
   -o $sourceReportFilePath
 
