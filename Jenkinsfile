@@ -6,15 +6,14 @@ pipeline {
         string(name: 'WORKSPACE_NAME', description: 'Workspace Name', defaultValue: 'Source')
     }
     environment {
+        TENANTID = credentials("pbi-${params.SOURCE_ENVIRONMENT}-tenantid")
         PBI_CREDS = credentials("pbi-${params.SOURCE_ENVIRONMENT}")
     }
     stages {
         stage('Export') {
             steps {
-                withEnv(['TENANTID=3a738245-bbdf-42b4-a0b9-0a3324c8c85e']) {
-                    sh "chmod +x -R $WORKSPACE"
-                    sh '$WORKSPACE/export-report.sh $REPORT_NAME $WORKSPACE_NAME'
-                }
+                sh "chmod +x -R $WORKSPACE"
+                sh '$WORKSPACE/export-report.sh $REPORT_NAME $WORKSPACE_NAME'
             }
         }
     }
