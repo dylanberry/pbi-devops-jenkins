@@ -1,0 +1,13 @@
+{
+	"name": "Power BI Jenkins",
+	
+	"dockerComposeFile": "docker-compose.yml",
+    "remoteUser" : "root",
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [ 8080, 50000 ],
+
+	"service": "jenkins",
+
+	"workspaceFolder": "/tf/caf"
+}

@@ -1,6 +1,13 @@
 #!/bin/bash
 echo "credentials: $TENANTID $PBI_CREDS_USR $PBI_CREDS_PSW"
-accessToken=$(curl "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
+curl "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
+	-H "Content-Type: application/x-www-form-urlencoded" \
+	-d "grant_type=client_credentials" \
+  -d "client_id=$PBI_CREDS_USR" \
+  -d "client_secret=$PBI_CREDS_PSW" \
+  -d "resource=https://analysis.windows.net/powerbi/api" \
+  -d "scope=https://analysis.windows.net/powerbi/api"
+accessToken=$(curl -sS "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
 	-H "Content-Type: application/x-www-form-urlencoded" \
 	-d "grant_type=client_credentials" \
   -d "client_id=$PBI_CREDS_USR" \
