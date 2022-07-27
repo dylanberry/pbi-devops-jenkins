@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "credentials: $TENANTID $PBI_CREDS_USR $PBI_CREDS_PSW"
 accessToken=$(curl "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
 	-H "Content-Type: application/x-www-form-urlencoded" \
 	-d "grant_type=client_credentials" \
