@@ -80,7 +80,6 @@ curl -sSX POST "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Rebind" \
 
 sourceReportFilePath="$PWD/$SourceReportName.pbix"
 echo "Exporting report $exportReportName ($exportReportId) to $sourceReportFilePath"
-echo "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferClientRouting=true"
 curl -sS "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferClientRouting=true" \
   -H "Authorization: Bearer $accessToken" \
   -o $sourceReportFilePath
