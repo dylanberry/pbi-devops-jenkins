@@ -25,7 +25,7 @@ encodedSpace="%20"
 encodedSourceWorkspaceName="${SourceWorkspaceName// /"$encodedSpace"}"
 
 echo "Get source workspace $SourceWorkspaceName"
-sourceGroupId=$(curl -s "$baseUri/groups?%24filter=name%20eq%20%27${encodedSourceWorkspaceName}%27" \
+sourceGroupId=$(curl "$baseUri/groups?%24filter=name%20eq%20%27${encodedSourceWorkspaceName}%27" \
   -H "Authorization: Bearer $accessToken" | jq -r '.value[0].id')
 
 echo "Get source $SourceReportName report"
@@ -42,9 +42,10 @@ sourceReportId=$(echo $sourceReport | jq -r '.id')
 dummyReportId=$(echo $dummyReport | jq -r '.id')
 
 exportReportName="$SourceReportName-export"
+echo "Clone $DummyReportName to $exportReportName report"
 exportReport=$(curl -X POST "$baseUri/groups/$sourceGroupId/reports/$dummyReportId/Clone" \
   -H "Authorization: Bearer $accessToken" \
-  -d "{ \"name\": \"$exportReportName\" }" \
+  -d "{ \"name\": \""$exportReportName"\" }" \
   -H "Content-Type: application/json")
   
 exportReportId=$(echo $exportReport | jq -r '.id')
@@ -74,7 +75,7 @@ curl -X POST "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Rebind" \
   -d "{ \"datasetId\": \"$dummyDatasetId\" }" \
   -H "Content-Type: application/json"
 
-sourceReportFilePath="$PWD/$SourceReportName.zip"
+sourceReportFilePath="$PWD/$SourceReportName.pbix"
 echo "Exporting report $exportReportName to $sourceReportFilePath"
 echo "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferClientRouting=true"
 curl "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferClientRouting=true" \
