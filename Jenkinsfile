@@ -18,7 +18,7 @@ pipeline {
             steps {
                 withEnv(['TENANTID=3a738245-bbdf-42b4-a0b9-0a3324c8c85e']) {
                     sh "chmod +x -R $WORKSPACE"
-                    sh '$WORKSPACE/export-report.sh'
+                    sh '$WORKSPACE/export-report.sh $REPORT_NAME $WORKSPACE_NAME'
                 }
             }
         }

@@ -1,12 +1,4 @@
 #!/bin/bash
-echo "credentials: $TENANTID $PBI_CREDS_USR $PBI_CREDS_PSW"
-curl "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
-	-H "Content-Type: application/x-www-form-urlencoded" \
-	-d "grant_type=client_credentials" \
-  -d "client_id=$PBI_CREDS_USR" \
-  -d "client_secret=$PBI_CREDS_PSW" \
-  -d "resource=https://analysis.windows.net/powerbi/api" \
-  -d "scope=https://analysis.windows.net/powerbi/api"
 accessToken=$(curl -sS "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
 	-H "Content-Type: application/x-www-form-urlencoded" \
 	-d "grant_type=client_credentials" \
@@ -14,12 +6,13 @@ accessToken=$(curl -sS "https://login.microsoftonline.com/$TENANTID/oauth2/token
   -d "client_secret=$PBI_CREDS_PSW" \
   -d "resource=https://analysis.windows.net/powerbi/api" \
   -d "scope=https://analysis.windows.net/powerbi/api" | jq -r '.access_token')
-echo "accessToken: $accessToken"
 
 baseUri="https://api.powerbi.com/v1.0/myorg"
 
-SourceWorkspaceName="Source"
-SourceReportName="helloworld_pbiservice_1"
+SourceReportName="$1"
+echo "SourceReportName: $SourceReportName"
+SourceWorkspaceName="$2"
+echo "SourceWorkspaceName: $SourceWorkspaceName"
 
 DummyDatasetName="blank"
 DummyReportName="blank"
