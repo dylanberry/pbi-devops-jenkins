@@ -6,6 +6,7 @@ accessToken=$(curl "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
   -d "client_secret=$PBI_CREDS_PSW" \
   -d "resource=https://analysis.windows.net/powerbi/api" \
   -d "scope=https://analysis.windows.net/powerbi/api" | jq -r '.access_token')
+echo "accessToken: $accessToken"
 
 baseUri="https://api.powerbi.com/v1.0/myorg"
 
@@ -25,30 +26,30 @@ encodedSpace="%20"
 encodedSourceWorkspaceName="${SourceWorkspaceName// /"$encodedSpace"}"
 
 echo "Get source workspace $SourceWorkspaceName"
-sourceGroupId=$(curl "$baseUri/groups?%24filter=name%20eq%20%27${encodedSourceWorkspaceName}%27" \
+sourceGroupId=$(curl -sS "$baseUri/groups?%24filter=name%20eq%20%27${encodedSourceWorkspaceName}%27" \
   -H "Authorization: Bearer $accessToken" | jq -r '.value[0].id')
+echo "Found source workspace id $sourceGroupId"
 
 echo "Get source $SourceReportName report"
-sourceReport=$(curl -s "$baseUri/groups/$sourceGroupId/reports" \
+sourceReport=$(curl -sS "$baseUri/groups/$sourceGroupId/reports" \
   -H "Authorization: Bearer $accessToken" | jq -r '.value[] | select(.name == "'$SourceReportName'")')
+sourceReportId=$(echo $sourceReport | jq -r '.id')
+echo "Found source report id $sourceReportId"
 
 echo "Get dummy $DummyReportName report"
-dummyReport=$(curl -s "$baseUri/groups/$sourceGroupId/reports" \
+dummyReport=$(curl -sS "$baseUri/groups/$sourceGroupId/reports" \
   -H "Authorization: Bearer $accessToken" | jq -r '.value[] | select(.name == "'$DummyReportName'")')
-
-sourceReportName=$(echo $sourceReport | jq -r '.name')
-sourceReportId=$(echo $sourceReport | jq -r '.id')
-
 dummyReportId=$(echo $dummyReport | jq -r '.id')
+echo "Found dummy report id $dummyReportId"
 
 exportReportName="$SourceReportName-export"
 echo "Clone $DummyReportName to $exportReportName report"
-exportReport=$(curl -X POST "$baseUri/groups/$sourceGroupId/reports/$dummyReportId/Clone" \
+exportReport=$(curl -sSX POST "$baseUri/groups/$sourceGroupId/reports/$dummyReportId/Clone" \
   -H "Authorization: Bearer $accessToken" \
   -d "{ \"name\": \""$exportReportName"\" }" \
-  -H "Content-Type: application/json")
-  
+  -H "Content-Type: application/json")  
 exportReportId=$(echo $exportReport | jq -r '.id')
+echo "Cloned export report id $exportReportId"
 
 updateReportContentBody="{ 
     \"sourceReport\":
@@ -60,25 +61,26 @@ updateReportContentBody="{
 }"
 
 echo "Copy report content from $sourceReportName to $exportReportName"
-curl -X POST "$baseUri/groups/$sourceGroupId/reports/$exportReportId/UpdateReportContent" \
+curl -sSX POST "$baseUri/groups/$sourceGroupId/reports/$exportReportId/UpdateReportContent" \
   -H "Authorization: Bearer $accessToken" \
   -d "$updateReportContentBody" \
   -H "Content-Type: application/json"
 
 echo "Get $DummyDatasetName dataset"
-dummyDatasetId=$(curl -s "$baseUri/groups/$sourceGroupId/datasets" \
+dummyDatasetId=$(curl -sS "$baseUri/groups/$sourceGroupId/datasets" \
   -H "Authorization: Bearer $accessToken" | jq -r '.value[] | select(.name == "'$DummyDatasetName'") | .id')
+echo "Found dummy dataset id $dummyDatasetId"
 
 echo "Rebinding report $exportReportName to $DummyDatasetName"
-curl -X POST "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Rebind" \
+curl -sSX POST "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Rebind" \
   -H "Authorization: Bearer $accessToken" \
   -d "{ \"datasetId\": \"$dummyDatasetId\" }" \
   -H "Content-Type: application/json"
 
 sourceReportFilePath="$PWD/$SourceReportName.pbix"
-echo "Exporting report $exportReportName to $sourceReportFilePath"
+echo "Exporting report $exportReportName ($exportReportId) to $sourceReportFilePath"
 echo "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferClientRouting=true"
-curl "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferClientRouting=true" \
+curl -sS "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferClientRouting=true" \
   -H "Authorization: Bearer $accessToken" \
   -o $sourceReportFilePath
 
