@@ -61,7 +61,7 @@ updateReportContentBody="{
     \"sourceType\": \"ExistingReport\"
 }"
 
-echo "Copy report content from $sourceReportName to $exportReportName"
+echo "Copy report content from $SourceReportName ($sourceReportId) to $exportReportName ($exportReportId)"
 curl -sSX POST "$baseUri/groups/$sourceGroupId/reports/$exportReportId/UpdateReportContent" \
   -H "Authorization: Bearer $accessToken" \
   -d "$updateReportContentBody" \
@@ -85,5 +85,5 @@ curl -sS "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferCl
   -H "Authorization: Bearer $accessToken" \
   -o $sourceReportFilePath
 
-# TODO: unzip
+echo "Unpacking report $sourceReportFilePath"
 unzip -o $sourceReportFilePath
