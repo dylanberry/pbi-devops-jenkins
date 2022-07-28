@@ -23,6 +23,10 @@ pipeline {
                 //         usernameVariable: 'GIT_USERNAME'
                 //     )
                 // ]) {
+//                 def ExportBranchName = "pbi-export/$BUILD_TAG-$SourceWorkspaceName-$SourceReportName"
+
+// git checkout -b $ExportBranchName
+// git commit -am "[$BUILD_TAG] $SourceWorkspaceName/$SourceReportName"
                 //     sh("git push https://${GIT_USERNAME}:${GIT_PASSWORD}@<REPO> --tags")
                 // }
             }

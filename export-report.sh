@@ -87,7 +87,7 @@ curl -sS "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferCl
 echo "Unpacking report $sourceReportFilePath"
 unzip -o $sourceReportFilePath
 
-ExportBranchName="pbi-export/$BUILD_TAG-$SourceWorkspaceName-$SourceReportName"
+# ExportBranchName="pbi-export/$BUILD_TAG-$SourceWorkspaceName-$SourceReportName"
 
-git checkout -b $ExportBranchName
-git commit -am "[$BUILD_TAG] $SourceWorkspaceName/$SourceReportName"
+# git checkout -b $ExportBranchName
+# git commit -am "[$BUILD_TAG] $SourceWorkspaceName/$SourceReportName"
