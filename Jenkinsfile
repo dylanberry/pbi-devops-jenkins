@@ -14,8 +14,9 @@ pipeline {
             steps {
                 sh "chmod +x -R $WORKSPACE"
                 sh '$WORKSPACE/export-report.sh $REPORT_NAME $WORKSPACE_NAME'
-                echo "Git URL is ${GIT_URL}"
-                sh "echo 'Git URL is ${GIT_URL}'"
+                archiveArtifacts artifacts: "${REPORT_NAME}.pbix"
+                // echo "Git URL is ${GIT_URL}"
+                // sh "echo 'Git URL is ${GIT_URL}'"
                 // withCredentials([
                 //     usernamePassword(
                 //         credentialsId: 'git-pass-credentials-ID',
@@ -23,11 +24,10 @@ pipeline {
                 //         usernameVariable: 'GIT_USERNAME'
                 //     )
                 // ]) {
-//                 def ExportBranchName = "pbi-export/$BUILD_TAG-$SourceWorkspaceName-$SourceReportName"
-
-// git checkout -b $ExportBranchName
-// git commit -am "[$BUILD_TAG] $SourceWorkspaceName/$SourceReportName"
-                //     sh("git push https://${GIT_USERNAME}:${GIT_PASSWORD}@<REPO> --tags")
+                //     String exportBranchName = "pbi-export/${BUILD_TAG}-$SourceWorkspaceName-$SourceReportName"
+                //     // git checkout -b $exportBranchName
+                //     // git commit -am "[$BUILD_TAG] $SourceWorkspaceName/$SourceReportName"
+                //     sh("git push -u origin $exportBranchName")
                 // }
             }
         }
