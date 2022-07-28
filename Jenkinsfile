@@ -14,6 +14,17 @@ pipeline {
             steps {
                 sh "chmod +x -R $WORKSPACE"
                 sh '$WORKSPACE/export-report.sh $REPORT_NAME $WORKSPACE_NAME'
+                echo "Git URL is ${GIT_URL}"
+                sh "echo 'Git URL is ${GIT_URL}'"
+                // withCredentials([
+                //     usernamePassword(
+                //         credentialsId: 'git-pass-credentials-ID',
+                //         passwordVariable: 'GIT_PASSWORD',
+                //         usernameVariable: 'GIT_USERNAME'
+                //     )
+                // ]) {
+                //     sh("git push https://${GIT_USERNAME}:${GIT_PASSWORD}@<REPO> --tags")
+                // }
             }
         }
     }
