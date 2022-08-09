@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "$TENANTID $PBI_CREDS_USR $PBI_CREDS_PSW"
 accessToken=$(curl -sS "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
 	-H "Content-Type: application/x-www-form-urlencoded" \
 	-d "grant_type=client_credentials" \
@@ -6,20 +7,16 @@ accessToken=$(curl -sS "https://login.microsoftonline.com/$TENANTID/oauth2/token
   -d "client_secret=$PBI_CREDS_PSW" \
   -d "resource=https://analysis.windows.net/powerbi/api" \
   -d "scope=https://analysis.windows.net/powerbi/api" | jq -r '.access_token')
-
+echo "accessToken: $accessToken"
 baseUri="https://api.powerbi.com/v1.0/myorg"
 
-SourceReportName="$1"
-echo "SourceReportName: $SourceReportName"
-SourceWorkspaceName="$2"
+SourceWorkspaceName="$1"
 echo "SourceWorkspaceName: $SourceWorkspaceName"
+SourceReportName="$2"
+echo "SourceReportName: $SourceReportName"
 
 DummyDatasetName="blank"
 DummyReportName="blank"
-
-TargetWorkspaceName="Target"
-TargetDatasetName="helloworld"
-TargetReportName="helloworld_restored"
 
 
 ##### Backup #####
@@ -80,12 +77,12 @@ curl -sSX POST "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Rebind" \
 
 sourceReportFilePath="$PWD/$SourceReportName.pbix"
 echo "Exporting report $exportReportName ($exportReportId) to $sourceReportFilePath"
-curl -sS "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export?preferClientRouting=true" \
+curl "$baseUri/groups/$sourceGroupId/reports/$exportReportId/Export" \
   -H "Authorization: Bearer $accessToken" \
   -o $sourceReportFilePath
 
 echo "Unpacking report $sourceReportFilePath"
-unzip -o $sourceReportFilePath
+unzip -o $sourceReportFilePath -d $SourceReportName
 
 # ExportBranchName="pbi-export/$BUILD_TAG-$SourceWorkspaceName-$SourceReportName"
 
