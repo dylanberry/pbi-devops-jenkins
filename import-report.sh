@@ -1,4 +1,5 @@
-accessToken=$(curl "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
+#!/bin/bash
+accessToken=$(curl -sS "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
 	-H "Content-Type: application/x-www-form-urlencoded" \
 	-d "grant_type=client_credentials" \
   -d "client_id=$PBI_CREDS_USR" \
@@ -8,89 +9,63 @@ accessToken=$(curl "https://login.microsoftonline.com/$TENANTID/oauth2/token" \
 
 baseUri="https://api.powerbi.com/v1.0/myorg"
 
-TargetWorkspaceName="Target"
-TargetDatasetName="helloworld"
-TargetReportName="helloworld_restored"
-
+TargetWorkspaceName="$1"
+echo "TargetWorkspaceName: $TargetWorkspaceName"
+TargetReportName="$2"
+echo "TargetReportName: $TargetReportName"
+TargetDatasetName="$3"
+echo "TargetDatasetName: $TargetDatasetName"
 
 
 ##### Restore #####
+encodedSpace="%20"
+encodedTargetWorkspaceName="${TargetWorkspaceName// /"$encodedSpace"}"
 
-echo "Get workspace $TargetWorkspaceName"
-groups=$(curl -X GET \
-  "$baseUri/groups?`$filter=name eq '$TargetWorkspaceName'" \
-  -H "Authorization: Bearer $accessToken")
-targetGroupId = $groups.value[0].Id
+echo "Get target workspace $TargetWorkspaceName"
+targetGroupId=$(curl -sS "$baseUri/groups?%24filter=name%20eq%20%27${encodedTargetWorkspaceName}%27" \
+  -H "Authorization: Bearer $accessToken" | jq -r '.value[0].id')
+echo "Found source workspace id $targetGroupId"
 
-echo "Get datasets"
-datasets=$(curl -X GET "$baseUri/groups/$targetGroupId/datasets" \
-  -H "Authorization: Bearer $accessToken")
-targetDataset = $datasets.value | ? name -eq $TargetDatasetName
+echo "Get target $TargetDatasetName dataset"
+targetDataset=$(curl -sS "$baseUri/groups/$targetGroupId/datasets" \
+  -H "Authorization: Bearer $accessToken" | jq -r '.value[] | select(.name == "'$TargetDatasetName'")')
+targetDatasetId=$(echo $targetDataset | jq -r '.id')
+echo "Found target dataset id $targetDatasetId"
 
-sourceReportConnectionsFilePath = Join-Path $PWD.Path $SourceReportName "Connections"
+sourceReportConnectionsFilePath="$PWD/$TargetReportName/Connections"
 
 echo "Updating dataset connection string in $sourceReportConnectionsFilePath"
-connections = Get-Content $sourceReportConnectionsFilePath | ConvertFrom-Json
-connections.RemoteArtifacts[0].DatasetId = $targetDataset.id
+cat $sourceReportConnectionsFilePath | jq '.RemoteArtifacts[0].DatasetId = "'$targetDatasetId'"' > $sourceReportConnectionsFilePath
 
-echo "Saving updated connections file $sourceReportConnectionsFilePath"
-connections | ConvertTo-Json -Depth 32 | Out-File -FilePath $sourceReportConnectionsFilePath -Encoding utf8 -Force
-
-sourceReportFolder = Join-Path $PWD.Path $SourceReportName
-restoredReportPath = Join-Path $PWD.Path "$TargetReportName.pbix"
+sourceReportFolder="$PWD/$TargetReportName"
+restoredReportPath="$PWD/$TargetReportName.pbix"
 echo "Zipping $sourceReportFolder to $restoredReportPath"
-Compress-Archive $sourceReportFolder\* $restoredReportPath -Force
+cd $sourceReportFolder
+zip -r $restoredReportPath ./*
+cd -
 
 echo "Uploading report $restoredReportPath"
-uri = "$baseUri/groups/$($targetGroupId)/imports?datasetDisplayName=$($TargetReportName).pbix&nameConflict=CreateOrOverwrite"
-boundary = "---------------------------" + (Get-Date).Ticks.ToString("x")
-boundarybytes = [System.Text.Encoding]::ASCII.GetBytes("`r`n--" + $boundary + "`r`n")
+curl -F "data=@$restoredReportPath" "$baseUri/groups/$targetGroupId/imports?datasetDisplayName=$TargetReportName.pbix&nameConflict=CreateOrOverwrite" \
+  -H "Authorization: Bearer $accessToken"
 
-request = [System.Net.WebRequest]::Create($uri)
-request.ContentType = "multipart/form-data; boundary=" + $boundary
-request.Method = "POST"
-request.KeepAlive = $true
-request.Headers.Add("Authorization", "Bearer $($token.accessToken)")
-rs = $request.GetRequestStream()
-
-rs.Write($boundarybytes, 0, $boundarybytes.Length);
-header = "Content-Disposition: form-data; filename=`"temp.pbix`"`r`nContent-Type: application / octet - stream`r`n`r`n"
-headerbytes = [System.Text.Encoding]::UTF8.GetBytes($header)
-rs.Write($headerbytes, 0, $headerbytes.Length);
-fileContent = [System.IO.File]::ReadAllBytes($restoredReportPath)
-rs.Write($fileContent,0,$fileContent.Length)
-trailer = [System.Text.Encoding]::ASCII.GetBytes("`r`n--" + $boundary + "--`r`n");
-rs.Write($trailer, 0, $trailer.Length);
-rs.Flush()
-rs.Close()
-
-response = $request.GetResponse()
-stream = $response.GetResponseStream()
-streamReader = [System.IO.StreamReader]($stream)
-content = $streamReader.ReadToEnd() | convertfrom-json
-jobId = $content.id
-streamReader.Close()
-response.Close()
-echo "Import job created $jobId"
-
-Start-Sleep -Milliseconds 500
+# Pause for 2 seconds to allow report to be uploaded
+sleep 2
 
 echo "Get reports"
-sourceReports=$(curl -X GET "$baseUri/groups/$targetGroupId/reports" \
-  -H "Authorization: Bearer $accessToken")
-targetReport = $sourceReports.value | ? name -EQ $TargetReportName
+targetReportId=$(curl -sS "$baseUri/groups/$targetGroupId/reports" \
+  -H "Authorization: Bearer $accessToken" | jq -r '.value[] | select(.name == "'$TargetReportName'") | .id')
+echo "Found target report id $targetReportId"
 
-echo "Rebinding report $($targetReport.name) to $($targetDataset.name)"
-rebindBody = @{ "datasetId" = "$($targetDataset.id)" } | ConvertTo-Json -Compress
-curl -X POST "$baseUri/groups/$targetGroupId/reports/$($targetReport.id)/Rebind" \
-  -H "Authorization: Bearer $accessToken") \
-  -Body $rebindBody -H "Content-Type: application/json" -Verbose
+echo "Rebinding report $TargetReportName to $TargetDatasetName"
+curl -X POST "$baseUri/groups/$targetGroupId/reports/$targetReportId/Rebind" \
+  -H "Authorization: Bearer $accessToken" \
+  -d "{ \"datasetId\": \"$targetDatasetId\" }" \
+  -H "Content-Type: application/json"
 
 echo "Get datasets"
-datasets=$(curl -X GET "$baseUri/groups/$targetGroupId/datasets" \
-  -H "Authorization: Bearer $accessToken")
-restoredDataset = $datasets.value | ? name -eq $targetReport.name
+restoredDatasetId=$(curl -sS "$baseUri/groups/$targetGroupId/datasets" \
+  -H "Authorization: Bearer $accessToken" | jq -r '.value[] | select(.name == "'$TargetReportName'") | .id')
 echo "Cleaning up dataset"
-curl -X Delete "$baseUri/groups/$targetGroupId/datasets/$($restoredDataset.id)" \
-  -H "Authorization: Bearer $accessToken") \
-  -H "Content-Type: application/json" -Verbose
+curl -X Delete "$baseUri/groups/$targetGroupId/datasets/$restoredDatasetId" \
+  -H "Authorization: Bearer $accessToken" \
+  -H "Content-Type: application/json"
