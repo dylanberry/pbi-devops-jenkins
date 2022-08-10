@@ -1,17 +1,17 @@
 pipeline {
     agent any
     parameters {
-        string(name: 'SOURCE_ENVIRONMENT', description: 'Source Environment', defaultValue: 'dev')
+        string(name: 'TARGET_ENVIRONMENT', description: 'Target Environment', defaultValue: 'dev')
         string(name: 'REPORT_NAME', description: 'Report Name', defaultValue: 'sample')
         string(name: 'DATASET_NAME', description: 'Dataset Name', defaultValue: 'sample')
         string(name: 'WORKSPACE_NAME', description: 'Workspace Name', defaultValue: 'Target')
     }
     environment {
-        TENANTID = credentials("pbi-${params.SOURCE_ENVIRONMENT}-tenantid")
-        PBI_CREDS = credentials("pbi-${params.SOURCE_ENVIRONMENT}")
+        TENANTID = credentials("pbi-${params.TARGET_ENVIRONMENT}-tenantid")
+        PBI_CREDS = credentials("pbi-${params.TARGET_ENVIRONMENT}")
     }
     stages {
-        stage('Export') {
+        stage('Import') {
             steps {
                 sh "chmod +x -R $WORKSPACE"
                 sh '$WORKSPACE/import/import-report.sh $WORKSPACE_NAME $REPORT_NAME $DATASET_NAME'
