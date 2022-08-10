@@ -2,8 +2,8 @@ pipeline {
     agent any
     parameters {
         string(name: 'SOURCE_ENVIRONMENT', description: 'Source Environment', defaultValue: 'dev')
-        string(name: 'REPORT_NAME', description: 'Report Name', defaultValue: 'helloworld_pbiservice_1')
-        string(name: 'DATASET_NAME', description: 'Dataset Name', defaultValue: 'helloworld')
+        string(name: 'REPORT_NAME', description: 'Report Name', defaultValue: 'sample')
+        string(name: 'DATASET_NAME', description: 'Dataset Name', defaultValue: 'sample')
         string(name: 'WORKSPACE_NAME', description: 'Workspace Name', defaultValue: 'Target')
     }
     environment {
