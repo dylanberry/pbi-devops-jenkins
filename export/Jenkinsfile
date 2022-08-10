@@ -13,7 +13,7 @@ pipeline {
         stage('Export') {
             steps {
                 sh "chmod +x -R $WORKSPACE"
-                sh '$WORKSPACE/export-report.sh $REPORT_NAME $WORKSPACE_NAME'
+                sh '$WORKSPACE/export/export-report.sh $WORKSPACE_NAME $REPORT_NAME'
                 archiveArtifacts artifacts: "${REPORT_NAME}.pbix"
                 // echo "Git URL is ${GIT_URL}"
                 // sh "echo 'Git URL is ${GIT_URL}'"

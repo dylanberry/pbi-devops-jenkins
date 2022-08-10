@@ -1,0 +1,22 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'SOURCE_ENVIRONMENT', description: 'Source Environment', defaultValue: 'dev')
+        string(name: 'REPORT_NAME', description: 'Report Name', defaultValue: 'helloworld_pbiservice_1')
+        string(name: 'DATASET_NAME', description: 'Dataset Name', defaultValue: 'helloworld')
+        string(name: 'WORKSPACE_NAME', description: 'Workspace Name', defaultValue: 'Target')
+    }
+    environment {
+        TENANTID = credentials("pbi-${params.SOURCE_ENVIRONMENT}-tenantid")
+        PBI_CREDS = credentials("pbi-${params.SOURCE_ENVIRONMENT}")
+    }
+    stages {
+        stage('Export') {
+            steps {
+                sh "chmod +x -R $WORKSPACE"
+                sh '$WORKSPACE/import/import-report.sh $WORKSPACE_NAME $REPORT_NAME $DATASET_NAME'
+                archiveArtifacts artifacts: "${REPORT_NAME}.pbix"
+            }
+        }
+    }
+}
